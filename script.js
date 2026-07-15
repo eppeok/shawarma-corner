@@ -1,7 +1,7 @@
 /* ==========================================================================
    Shawarma Corner — interactivity only.
    All menu content is static HTML (SEO + zero layout shift); this file
-   just wires up search, nav, theme, cart UI, hours badge and skeleton reveal.
+   just wires up search, nav, theme, hours badge and skeleton reveal.
    ========================================================================== */
 (function () {
   "use strict";
@@ -155,134 +155,6 @@
       searchInput.focus();
     });
   }
-
-  /* ---------------- Quantity steppers ---------------- */
-  document.querySelectorAll(".qty-control").forEach(function (control) {
-    var display = control.querySelector("span");
-    var minus = control.querySelector('[data-action="decrease"]');
-    var plus = control.querySelector('[data-action="increase"]');
-    var qty = 1;
-
-    function render() { display.textContent = qty; }
-
-    minus.addEventListener("click", function () {
-      qty = Math.max(1, qty - 1);
-      render();
-    });
-    plus.addEventListener("click", function () {
-      qty = Math.min(20, qty + 1);
-      render();
-    });
-  });
-
-  /* ---------------- Cart (UI only, persisted for demo realism) ---------------- */
-  var CART_KEY = "scm-cart";
-  var cart = [];
-  try {
-    cart = JSON.parse(sessionStorage.getItem(CART_KEY)) || [];
-  } catch (e) {
-    cart = [];
-  }
-
-  var cartBar = document.getElementById("cartBar");
-  var cartPanel = document.getElementById("cartPanel");
-  var cartList = document.getElementById("cartList");
-  var cartTotalEl = document.getElementById("cartTotal");
-  var cartCountEl = document.getElementById("cartCount");
-  var scrim = document.getElementById("scrim");
-
-  function money(n) { return "AED " + n.toFixed(2); }
-
-  function persistCart() {
-    sessionStorage.setItem(CART_KEY, JSON.stringify(cart));
-  }
-
-  function renderCart() {
-    var count = cart.reduce(function (sum, i) { return sum + i.qty; }, 0);
-    var total = cart.reduce(function (sum, i) { return sum + i.qty * i.price; }, 0);
-
-    if (count > 0) {
-      cartBar.classList.add("show");
-      cartBar.querySelector(".cart-bar__info").innerHTML =
-        "<span>" + count + "</span> item" + (count === 1 ? "" : "s") + " · " + money(total);
-    } else {
-      cartBar.classList.remove("show");
-    }
-
-    if (cartCountEl) cartCountEl.textContent = count;
-    if (cartTotalEl) cartTotalEl.textContent = money(total);
-
-    cartList.innerHTML = "";
-    if (cart.length === 0) {
-      cartList.innerHTML = '<p class="cart-empty">Your cart is empty. Add a dish to get started.</p>';
-      return;
-    }
-    cart.forEach(function (item, index) {
-      var row = document.createElement("div");
-      row.className = "cart-item";
-      row.innerHTML =
-        '<div><div class="cart-item__name">' + item.name + '</div>' +
-        '<div class="cart-item__meta">Qty ' + item.qty + ' · ' + money(item.price * item.qty) + '</div></div>' +
-        '<button class="cart-item__remove" type="button" aria-label="Remove ' + item.name + '">Remove</button>';
-      row.querySelector(".cart-item__remove").addEventListener("click", function () {
-        cart.splice(index, 1);
-        persistCart();
-        renderCart();
-      });
-      cartList.appendChild(row);
-    });
-  }
-
-  document.querySelectorAll(".add-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var card = btn.closest(".dish-card");
-      var name = card.querySelector(".dish-title-row h3").textContent.trim();
-      var price = parseFloat(card.getAttribute("data-price"));
-      var qtyEl = card.querySelector(".qty-control span");
-      var qty = qtyEl ? parseInt(qtyEl.textContent, 10) : 1;
-
-      var existing = cart.find(function (i) { return i.name === name; });
-      if (existing) {
-        existing.qty += qty;
-      } else {
-        cart.push({ name: name, price: price, qty: qty });
-      }
-      persistCart();
-      renderCart();
-
-      btn.classList.add("added");
-      var original = btn.innerHTML;
-      btn.innerHTML = "Added";
-      setTimeout(function () {
-        btn.classList.remove("added");
-        btn.innerHTML = original;
-      }, 1200);
-    });
-  });
-
-  function openCart() {
-    cartPanel.classList.add("open");
-    scrim.classList.add("show");
-    cartPanel.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  }
-  function closeCart() {
-    cartPanel.classList.remove("open");
-    scrim.classList.remove("show");
-    cartPanel.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-
-  var viewCartBtn = document.getElementById("viewCartBtn");
-  var closeCartBtn = document.getElementById("closeCartBtn");
-  if (viewCartBtn) viewCartBtn.addEventListener("click", openCart);
-  if (closeCartBtn) closeCartBtn.addEventListener("click", closeCart);
-  if (scrim) scrim.addEventListener("click", closeCart);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeCart();
-  });
-
-  renderCart();
 
   /* ---------------- Coupon copy ---------------- */
   var couponBtn = document.getElementById("couponCopy");
